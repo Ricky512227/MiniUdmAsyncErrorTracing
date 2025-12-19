@@ -32,6 +32,7 @@ func GetDeployments(clientset *kubernetes.Clientset, ctx context.Context,
 	list, err := clientset.AppsV1().Deployments(namespace).
 		List(ctx, metav1.ListOptions{})
 	if err != nil {
+     log.Printf("Error processing request: %v", err)
 		return nil, err
 	}
 	return list.Items, nil
