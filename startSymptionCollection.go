@@ -5,6 +5,7 @@ import "fmt"
 
 
 func main(){
+// Process request
 	/* Command Syntax :startProcessTraces.go -n <namsesapce> -c <"podnames">
 		Example:
 			startProcessTraces.go -n miniudm -c "uecm"
