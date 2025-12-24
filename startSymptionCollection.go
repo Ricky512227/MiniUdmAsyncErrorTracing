@@ -1,67 +1,223 @@
 package main
 
-import "fmt"
+import (
+	"context"
+	"flag"
+	"fmt"
+	"log"
+	"strings"
+	"sync"
+	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	ctrl "sigs.k8s.io/controller-runtime"
+)
 
+// SymptomCollectionConfig holds configuration for symptom collection
+type SymptomCollectionConfig struct {
+	Namespace string
+	Pods      []string
+	StartTime time.Time
+}
 
-func main(){
-// Process request
-	/* Command Syntax :startProcessTraces.go -n <namsesapce> -c <"podnames">
-		Example:
-			startProcessTraces.go -n miniudm -c "uecm"
-			startProcessTraces.go -n dracvnf -c "uecm nim"
-	**** Concurrency validaiton check = 1  **** 
-		1. Get the namespace from the arguement.
-    	2. Get the pod from the arguement to capture trace. 
-    	3. Check the namespace exists in the cluster.
-    	4. Check the deployments of the pod exists in the namespace.
-    	5. Check the readiness and liveness 
-    	6. Calculate the number of Process inside the mcc platform for the required process.
-    
-    Record the start timestamp of execution also record the  currnet timestamp of the pod 
-    Routine :: 1 
-    	Parallely enable the trace of each process.
-    Routine :: 2 
-    	Parallely enable the pcap.
-    Routine :: 3 
-    	Exceute the pytbot command on testclient pod and wait the command's output status
-	    Routine :: 4
-	    	watch the /cmconfig.log --> Parallely, read the file for any run time error [mapping should be done using keywords]
-	    							--> create a channel and inform to the user if any starts/error was logging.
-	    Routine :: 5
-	    	watch the /logstore/TspCore for every nth Sec --> Parallely,  check for any cores.
-	    									              --> create a channel and inform to the user if any coring happens
-	    Routine :: 6
-	    	watch the /RTPTraceError --> Parallely, read the file for any run time error [mapping should be done using keywords]
-	    							--> create a channel and inform to the user if any starts/error was logging.
-	    Routine :: 7
-	    	watch the /Envoy --> Parallely, read the file for any run time error [mapping should be done using keywords]
-	    					--> create a channel and inform to the user if any starts/error was logging.
-	    Routine :: 8
-	        watch the /dumplog  --> Parallely, read the file for any run time error [mapping should be done using keywords]
-	        					--> create a channel and inform to the user if any starts/error was logging.
-    Routine ::  9
-    	Once the pybot cmd status is set to complete
-    		Routine :: 10
-      			store the process traces into single file , can be used for analysis and also for symton collecitons
-		    Routine ::  
-		    	Parallely Disables the trace of each process.
-		    Routine ::
-		    	Parallely Disables the pcaps.
-		    Routine :: 
-		        Stops the process for to watch the /cmconfig.log
-		        Store the traces for analysis or symptom collection
-		    Routine :: 
-		        Stops the process for to watch the /logstore/TspCore
-		        Store the traces for analysis or symptom collection
-		    Routine :: 
-		        Stops the process for to watch the /RTPTraceError
-		        Store the traces for analysis or symptom collection
-		    Routine :: 
-		        Stops the process for to watch the /Envoy
-		        Store the traces for analysis or symptom collection
-		    Routine :: 
-		        Stops the process for to watch the /dumplog
-		        Store the traces for analysis or symptom collection
-	Copy all the informatio to local path (All traces, pcap, log.html)*/
+var (
+	errorKeywords = []string{"error", "ERROR", "fatal", "FATAL", "exception", "EXCEPTION", "panic", "PANIC"}
+	logFiles      = []string{
+		"/cmconfig.log",
+		"/logstore/TspCore",
+		"/RTPTraceError",
+		"/Envoy",
+		"/dumplog",
+	}
+)
+
+// StartSymptomCollection starts the symptom collection process
+// This can be called from a separate main or integrated into another tool
+func StartSymptomCollection() {
+	// Command Syntax: startSymptionCollection -n <namespace> -c <"podnames">
+	// Example: startSymptionCollection -n miniudm -c "uecm"
+	// Example: startSymptionCollection -n dracvnf -c "uecm nim"
+
+	namespace := flag.String("n", "default", "Kubernetes namespace")
+	podsStr := flag.String("c", "", "Comma-separated pod names")
+	flag.Parse()
+
+	if *podsStr == "" {
+		log.Fatal("Error: pod names (-c) is required")
+	}
+
+	pods := strings.Split(*podsStr, " ")
+	config := &SymptomCollectionConfig{
+		Namespace: *namespace,
+		Pods:      pods,
+		StartTime: time.Now(),
+	}
+
+	log.Printf("Starting symptom collection")
+	log.Printf("Namespace: %s", config.Namespace)
+	log.Printf("Pods: %v", config.Pods)
+
+	ctx := context.Background()
+	kubeConfig := ctrl.GetConfigOrDie()
+	clientset := kubernetes.NewForConfigOrDie(kubeConfig)
+
+	// Validation checks
+	if err := validateNamespace(clientset, ctx, config.Namespace); err != nil {
+		log.Fatalf("Namespace validation failed: %v", err)
+	}
+
+	if err := validateDeployments(clientset, ctx, config.Namespace, config.Pods); err != nil {
+		log.Fatalf("Deployment validation failed: %v", err)
+	}
+
+	// Start symptom collection routines
+	var wg sync.WaitGroup
+	errorChan := make(chan string, 100)
+
+	// Routine 1: Enable traces (placeholder)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Println("Routine 1: Enabling traces for processes")
+		enableTraces(config.Pods)
+	}()
+
+	// Routine 2: Enable pcap (placeholder)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Println("Routine 2: Enabling pcap capture")
+		enablePcap(config.Pods)
+	}()
+
+	// Routine 3: Execute pybot command (placeholder)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Println("Routine 3: Executing pybot command")
+		executePybot()
+	}()
+
+	// Routines 4-8: Watch log files
+	for i, logFile := range logFiles {
+		wg.Add(1)
+		go func(file string, routineNum int) {
+			defer wg.Done()
+			log.Printf("Routine %d: Watching %s", routineNum, file)
+			watchLogFile(file, errorChan)
+		}(logFile, i+4)
+	}
+
+	// Routine 9: Monitor for completion and cleanup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Println("Routine 9: Monitoring completion")
+		time.Sleep(10 * time.Second) // Simulate test duration
+		log.Println("Test completed, starting cleanup...")
+		cleanup(config)
+	}()
+
+	// Error monitoring
+	go func() {
+		for errMsg := range errorChan {
+			log.Printf("ERROR DETECTED: %s", errMsg)
+		}
+	}()
+
+	wg.Wait()
+	close(errorChan)
+
+	log.Println("Symptom collection completed")
+}
+
+// validateNamespace checks if namespace exists
+func validateNamespace(clientset *kubernetes.Clientset, ctx context.Context, namespace string) error {
+	_, err := clientset.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("namespace %s does not exist: %w", namespace, err)
+	}
+	return nil
+}
+
+// validateDeployments checks if deployments exist
+func validateDeployments(clientset *kubernetes.Clientset, ctx context.Context, namespace string, pods []string) error {
+	deployments, err := clientset.AppsV1().Deployments(namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to list deployments: %w", err)
+	}
+
+	for _, pod := range pods {
+		found := false
+		for _, dep := range deployments.Items {
+			if strings.Contains(dep.Name, pod) {
+				found = true
+				// Check readiness
+				if dep.Status.ReadyReplicas < *dep.Spec.Replicas {
+					return fmt.Errorf("deployment %s is not ready", dep.Name)
+				}
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("deployment for pod %s not found", pod)
+		}
+	}
+
+	return nil
+}
+
+// enableTraces enables tracing for processes (placeholder)
+func enableTraces(pods []string) {
+	for _, pod := range pods {
+		log.Printf("Enabling trace for pod: %s", pod)
+		// Actual implementation would enable tracing
+		time.Sleep(500 * time.Millisecond)
+	}
+}
+
+// enablePcap enables pcap capture (placeholder)
+func enablePcap(pods []string) {
+	for _, pod := range pods {
+		log.Printf("Enabling pcap for pod: %s", pod)
+		// Actual implementation would enable pcap
+		time.Sleep(500 * time.Millisecond)
+	}
+}
+
+// executePybot executes pybot command (placeholder)
+func executePybot() {
+	log.Println("Executing pybot command on testclient pod")
+	// Actual implementation would execute pybot
+	time.Sleep(2 * time.Second)
+	log.Println("Pybot command completed")
+}
+
+// watchLogFile watches a log file for errors
+func watchLogFile(filePath string, errorChan chan<- string) {
+	// In real implementation, this would:
+	// 1. Read file continuously
+	// 2. Check for error keywords
+	// 3. Send errors to channel
+	for i := 0; i < 10; i++ {
+		time.Sleep(1 * time.Second)
+		// Simulate error detection
+		if i == 5 {
+			errorChan <- fmt.Sprintf("Error detected in %s at line %d", filePath, i*100)
+		}
+	}
+}
+
+// cleanup performs cleanup after test completion
+func cleanup(config *SymptomCollectionConfig) {
+	log.Println("Disabling traces...")
+	// Disable traces
+	log.Println("Disabling pcaps...")
+	// Disable pcaps
+	log.Println("Stopping log watchers...")
+	// Stop watchers
+	log.Println("Storing traces for analysis...")
+	// Store traces
+	log.Printf("Symptom collection completed in %v", time.Since(config.StartTime))
 }

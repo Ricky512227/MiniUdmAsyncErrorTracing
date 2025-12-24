@@ -8,4 +8,3 @@ package main
 // 2. Apply image to deployment
 // 3. Monitor rollout status
 // 4. Verify health checks
-
