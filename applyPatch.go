@@ -1,23 +1,29 @@
-Dev will generate lib file and copy to any path in the node.
+package main
 
-Syntax ::  applyPatch.xx "absolutepath of the patch" "servicename"
+// applyPatch handles patch application to MiniUdm services
+//
+// Syntax: applyPatch.xx "absolutepath of the patch" "servicename"
+//
+// Workflow:
+// 1. Get the md5sum of the patchFile
+// 2. Check if patch file is already present in /tcnVol
+//    - If not:
+//      a. Copy patch to /tcnVol of the required service
+//      b. If library exists in /opt/SMAW/INTP/lib64 and md5sum differs:
+//         - Backup existing lib file
+//         - Link new file from /tcnVol to /opt/SMAW/INTP/lib64
+//    - If yes:
+//      a. If md5sum differs and same patch is already linked:
+//         - Copy patch to /tcnVol of the required service
+// 3. Login to required service of mcc container, kill the service process
+// 4. Monitor until process comes up
+// 5. If all processes come up:
+//    - Log patching as successful
+//    - Else: Log patching as unsuccessful
 
-1. Get the md5sum of the patchFile.
-2. Check the patch file is already present in the /tcnVol, 
-   1.If not, 
-        1. Copy the patch to the /tcnVol of the required service.
-        2. If the library is already exists in the /opt/SMAW/INTP/lib64 and md5sum of the patchfile is diff.
-            a. Take the batkup of the existing lib file, link the new file form /tcnVol to the /opt/SMAW/INTP/lib64.
-  2. If yes,
-        1. the md5sum are diff and the same patch is already linked form /tcnVol to the /opt/SMAW/INTP/lib64.
-        2. then Copy the patch to the /tcnVol of the required service
-3. Login the required service of mcc container, kill the service process
-4. Monitor till the process comes up.
-5. If all the process comesup then, 
-    1. Log Patching as successfull
-    2. else, Patching as unsuccesfull.
-    
- 
-      
-  
-
+// TODO: Implement patch application logic
+// This will include:
+// - MD5 validation
+// - File copying and linking
+// - Process management
+// - Health monitoring
