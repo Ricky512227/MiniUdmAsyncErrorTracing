@@ -1,0 +1,14 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "symptom",
+    srcs = ["collector.go"],
+    importpath = "github.com/Ricky512227/MiniUdmAsyncErrorTracing/pkg/symptom",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/config",
+        "//pkg/kubernetes",
+        "@go_uber_org_zap//:zap",
+    ],
+)
+

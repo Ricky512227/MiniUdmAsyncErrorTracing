@@ -4,19 +4,29 @@
 *.dll
 *.so
 *.dylib
-MiniUdmAsyncErrorTracing
+/bin/
+/miniumd
 
 # Test binary
 *.test
 
 # Output of the go coverage tool
 *.out
+/coverage/
 
 # Dependency directories
 vendor/
 
 # Go workspace file
 go.work
+
+# Bazel
+bazel-*
+.bazel/
+bazel-bin/
+bazel-out/
+bazel-testlogs/
+*.bazel.lock
 
 # IDE
 .idea/
@@ -35,4 +45,12 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# Configuration (local overrides)
+config.local.yaml
+*.local.yaml
+
+# Build artifacts
+dist/
+build/
 

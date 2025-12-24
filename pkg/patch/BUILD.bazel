@@ -1,0 +1,14 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "patch",
+    srcs = ["patch.go"],
+    importpath = "github.com/Ricky512227/MiniUdmAsyncErrorTracing/pkg/patch",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/config",
+        "//pkg/utils",
+        "@go_uber_org_zap//:zap",
+    ],
+)
+

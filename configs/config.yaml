@@ -1,0 +1,36 @@
+kubernetes:
+  namespace: "default"
+  kubeconfig_path: ""
+  timeout: "30s"
+
+paths:
+  tcn_vol_path: "/tcnVol"
+  lib64_path: "/opt/SMAW/INTP/lib64"
+  log_paths:
+    - "/cmconfig.log"
+    - "/logstore/TspCore"
+    - "/RTPTraceError"
+    - "/Envoy"
+    - "/dumplog"
+
+logging:
+  level: "info"
+  format: "json"
+
+symptom:
+  error_keywords:
+    - "error"
+    - "ERROR"
+    - "fatal"
+    - "FATAL"
+    - "exception"
+    - "EXCEPTION"
+    - "panic"
+    - "PANIC"
+  check_interval: "1s"
+  collection_timeout: "10m"
+
+patch:
+  backup_enabled: true
+  health_timeout: "30s"
+

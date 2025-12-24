@@ -1,0 +1,32 @@
+# Common Bazel options
+
+# Use bzlmod (Bazel 6+)
+common --enable_bzlmod
+
+# Build in fastbuild mode by default
+build --compilation_mode=fastbuild
+
+# Go-specific settings
+build --@rules_go//go/config:race=false
+build --@rules_go//go/config:msan=false
+build --@rules_go//go/config:static=false
+
+# Output directory
+build --output_user_root=.bazel
+
+# Verbose output for debugging (comment out for less verbose)
+# build --verbose_failures
+
+# Platform settings
+build --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64
+build:macos --platforms=@io_bazel_rules_go//go/toolchain:darwin_amd64
+build:windows --platforms=@io_bazel_rules_go//go/toolchain:windows_amd64
+
+# Test settings
+test --test_output=errors
+test --test_summary=detailed
+
+# Remote execution (uncomment if using remote execution)
+# build --remote_executor=grpc://your-executor:1985
+# build --remote_cache=grpc://your-cache:1985
+

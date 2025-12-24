@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+# gazelle:ignore
+go_library(
+    name = "kubernetes",
+    srcs = ["client.go"],
+    importpath = "github.com/Ricky512227/MiniUdmAsyncErrorTracing/pkg/kubernetes",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/utils",
+        # Dependencies will be resolved by Gazelle from go.mod
+        # Run: bazel run //:gazelle
+    ],
+)
+

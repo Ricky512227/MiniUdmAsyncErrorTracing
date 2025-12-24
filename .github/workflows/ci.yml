@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Bazel
+      uses: bazel-contrib/setup-bazel@v0.6.1
+      with:
+        bazelisk-version: '1.x'
+    
+    - name: Cache Bazel
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/bazel
+          .bazel
+        key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', 'MODULE.bazel', 'BUILD.bazel', '**/BUILD.bazel') }}
+        restore-keys: |
+          ${{ runner.os }}-bazel-
+    
+    - name: Run tests
+      run: bazel test //...
+    
+    - name: Collect test results
+      if: always()
+      run: |
+        find bazel-testlogs -name "test.xml" -type f | head -10
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+        args: --timeout=5m
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        os: [linux, darwin, windows]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Bazel
+      uses: bazel-contrib/setup-bazel@v0.6.1
+      with:
+        bazelisk-version: '1.x'
+    
+    - name: Build binaries
+      run: |
+        bazel build //cmd/list-deployments:list-deployments --platforms=@io_bazel_rules_go//go/toolchain:${{ matrix.os }}_amd64
+        bazel build //cmd/symptom-collection:symptom-collection --platforms=@io_bazel_rules_go//go/toolchain:${{ matrix.os }}_amd64
+        bazel build //cmd/apply-patch:apply-patch --platforms=@io_bazel_rules_go//go/toolchain:${{ matrix.os }}_amd64
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: binaries-${{ matrix.os }}
+        path: bazel-bin/
+

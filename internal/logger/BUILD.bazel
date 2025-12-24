@@ -1,0 +1,13 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "logger",
+    srcs = ["logger.go"],
+    importpath = "github.com/Ricky512227/MiniUdmAsyncErrorTracing/internal/logger",
+    visibility = ["//visibility:private"],
+    deps = [
+        "@go_uber_org_zap//:zap",
+        "@go_uber_org_zap//zapcore:zapcore",
+    ],
+)
+

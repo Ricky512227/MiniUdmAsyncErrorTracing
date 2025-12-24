@@ -1,0 +1,20 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "utils",
+    srcs = [
+        "command.go",
+        "file.go",
+        "hash.go",
+        "time.go",
+    ],
+    importpath = "github.com/Ricky512227/MiniUdmAsyncErrorTracing/pkg/utils",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "utils_test",
+    srcs = ["utils_test.go"],
+    embed = [":utils"],
+)
+

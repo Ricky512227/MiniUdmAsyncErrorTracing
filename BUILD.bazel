@@ -1,0 +1,8 @@
+load("@gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/Ricky512227/MiniUdmAsyncErrorTracing
+# gazelle:exclude vendor
+# gazelle:exclude bazel-*
+
+gazelle(name = "gazelle")
+

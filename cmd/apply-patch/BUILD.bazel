@@ -1,0 +1,22 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "apply_patch_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/Ricky512227/MiniUdmAsyncErrorTracing/cmd/apply-patch",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//internal/logger",
+        "//pkg/config",
+        "//pkg/patch",
+        "@com_github_spf13_cobra//:cobra",
+        "@go_uber_org_zap//:zap",
+    ],
+)
+
+go_binary(
+    name = "apply-patch",
+    embed = [":apply_patch_lib"],
+    visibility = ["//visibility:public"],
+)
+
