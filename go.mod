@@ -1,4 +1,4 @@
-module github.com/Ricky512227/TestTracing
+module github.com/Ricky512227/MiniUdmAsyncErrorTracing
 
 go 1.18
 
